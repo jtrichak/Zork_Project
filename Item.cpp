@@ -31,17 +31,6 @@ Item firstItemInit(xml_node<>* child) {
 }
 
 void wireItem(Item* itemArray, Item** pointer, char* name, int maxItem) {
-	/* Item* targetItem = findItem(itemArray, name, maxItem);
-
-	int i;
-	int lastItem;
-	for(i = 0; i < maxItem; i++) {
-		if(curRoom -> roomItem[i] == NULL) {
-			lastItem = i;
-			i += maxItem;
-		}
-	}
-	*/
 	*pointer = findItem(itemArray, name, maxItem);	
 	return;
 }
@@ -54,4 +43,17 @@ Item* findItem(Item* itemArray, char* name, int maxItem) {
 		}
 	}
 	return NULL;
+}
+
+int findItemIndex(Item* itemArray, char* Name, int maxItem) {
+	int index = -1; //Returns if item not existent
+	int i;
+	for(i = 0; i < maxItem; i++) {
+		if(strcmp(itemArray[i].Name, Name) == 0) {
+			index = i;
+			i += maxItem;
+		}
+	}
+
+	return index;
 }

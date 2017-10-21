@@ -16,10 +16,8 @@ int main(int argc, char* argv[]) {
 			doc.parse<0>(&buffer[0]);
 			xml_node<>* node = doc.first_node();
 			xml_node<>* child;
-			xml_node<>* copyChild;
 			xml_node<>* child2;
 			xml_node<>* child3;
-			xml_node<>* child4;
 
 
 			int maxRoomCount = 0;		//Maximum amount of game rooms
@@ -49,56 +47,90 @@ int main(int argc, char* argv[]) {
 				node = node -> next_sibling();
 			}
 
+
+			xml_node<>** roomNodeArray = new xml_node<>*[maxRoomCount];
+			xml_node<>** itemNodeArray = new xml_node<>*[maxItemCount];
+			xml_node<>** creatNodeArray = new xml_node<>*[maxCreatCount];
+			xml_node<>** contNodeArray = new xml_node<>*[maxContCount];
+
+
+
 			Room* roomArray = new Room[maxRoomCount]; 							// Array of all possible rooms
 			Item* itemArray = new Item[maxItemCount];							// Array of all possible items
-			//Creature* creatArray = new Creature[maxCreatCount]				// Array of all possible creatures
-			//Container* contArray = new Container[maxContCount]				// Array of all possible containers
+			Creature* creatArray = new Creature[maxCreatCount];					// Array of all possible creatures
+			Container* contArray = new Container[maxContCount];					// Array of all possible containers
 			Item** inventory = new Item*[maxItemCount];							// Array of items on the adventurer
 
 			Item*** roomInventories = new Item**[maxRoomCount];					// Array of size room, holds arrays of size maxItem pointers for each room
+			Container*** roomContainers = new Container**[maxRoomCount];
+			Creature*** roomCreatures = new Creature**[maxRoomCount];
+			int* roomContCount = new int[maxRoomCount];
+			int* roomTrigCount = new int[maxRoomCount];
+			int* roomInventoryCount = new int[maxRoomCount];
+
 			for(i = 0; i < maxRoomCount; i++) {
-				inventory[i] = NULL;
 				roomInventories[i] = new Item*[maxItemCount];
 				for(j = 0; j < maxItemCount; j++) {
-					roomInventories[i][j] = NULL;								// Initializes all pointers in the item array in each room to NULL
+					roomInventories[i][j] = NULL;
+					inventory[i] = NULL;								// Initializes all pointers in the item array in each room to NULL
+				}
+				roomCreatures[i] = new Creature*[maxCreatCount];
+				for(j = 0; j < maxCreatCount; j++) {
+					roomCreatures[i][j] = NULL;
+				}
+				roomContainers[i] = new Container*[maxContCount];
+				for(j = 0; j < maxContCount; j++) {
+					roomContainers[i][j] = NULL;
+				}
+				roomTrigCount[i] = 0;
+				roomContCount[i] = 0;
+				roomInventoryCount[i] = 0;
+			}
+/*
+			Creature*** roomCreatures = new Creature**[maxRoomCount];
+			for(i = 0; i < maxRoomCount; i++) {
+				roomCreatures[i] = new Creature*[maxCreatCount];
+				for(j = 0; j < maxCreatCount; j++) {
+					roomCreatures[i][j] = NULL;
+				}
+			}
+			Container*** roomContainers = new Container**[maxRoomCount];
+			for(i = 0; i < maxRoomCount; i++) {
+				roomContainers[i] = new Container*[maxContCount];
+				for(j = 0; j < maxContCount; j++) {
+					roomContainers[i][j] = NULL;
 				}
 			}
 
+			int* roomContCount = new int[maxRoomCount];
+			int* roomTrigCount = new int[maxRoomCount];
 			int* roomInventoryCount = new int[maxRoomCount];
 			for(i = 0; i < maxRoomCount; i++) {
+				roomTrigCount[i] = 0;
+				roomContCount[i] = 0;
 				roomInventoryCount[i] = 0;
 			}
-
-			/*
-			   for(i = 0; i < maxRoomCount; i++) {
-			   roomArray[i].roomItem = new Item*[maxItemCount];
-			//roomArray[i].roomContainer = new Container*[maxContCount];		Cant use this section, I assumed you can declare ** in an object
-			//roomArray[i].roomCreature = new Creature*[maxCreatCount];			and malloc later, but need size. Finding size through DOC instead
-			//roomArray[i].roomTrigger = new Trigger*[maxTrigCount];
+*/
+			Item*** contInventories = new Item**[maxContCount];					// Array of array of item pointers, size maxRoomCount by maxItemCount
+			int* contTrigCount = new int[maxContCount];
+			int* contItemCount = new int[maxContCount];
+			for(i = 0; i < maxContCount; i++) {
+				contInventories[i] = new Item*[maxItemCount];
+				contItemCount[i] = 0;
+				contTrigCount[i] = 0;
+				for(j = 0; j < maxItemCount; j++) {
+					contInventories[i][j] = NULL;								// Initializes all pointers in the item pointer array to NULL
+				}
 			}
-
-			for(i = 0; i < maxRoomCount; i++) {
-			for(j = 0; j < maxItemCount; j++) {
-			roomArray[i].roomItem[j] = NULL;
+/*
+			int* contTrigCount = new int[maxContCount];
+			int* contItemCount = new int[maxContCount];
+			for(i = 0; i < maxContCount; i++) {
+				contItemCount[i] = 0;
+				contTrigCount[i] = 0;
 			}
-			}
-
-
-			for(i = 0; i < maxRoomCount; i++) {
-			for(j = 0; j < maxCreatCount; j++) {
-			roomArray[i].roomCreature[j] = NULL;
-			}
-			}
-
-			for(i = 0; i < maxRoomCount; i++) {
-			for(j = 0; j < maxContCount; j++) {
-			roomArray[i].roomContainer[j] = NULL;
-			}
-			}
-			*/
-
-			int inventoryCount = 0;			// Number of items in adventurer's inventory
-
+*/
+			int inventoryCount = 0;												// Number of items in adventurer's inventory
 			node = doc.first_node();
 			int curRoom = 0;
 			int curItem = 0;
@@ -109,18 +141,24 @@ int main(int argc, char* argv[]) {
 				child = node->first_node();
 				while(child != 0) {
 					if(strcmp(child->name(), (char*) "room") == 0) {
+						roomNodeArray[curRoom] = child;
 						roomArray[curRoom] = firstRoomInit(child);
 						curRoom++;
 					}
 					else if(strcmp(child->name(), (char*) "item") == 0) {
+						itemNodeArray[curItem] = child;
 						itemArray[curItem] = firstItemInit(child);
 						curItem++;
 					}
 					else if(strcmp(child->name(), (char*) "creature") == 0) {
-						//TODO - add first Creature initialization
+						creatNodeArray[curCreat] = child;
+						creatArray[curCreat] = firstCreatInit(child);
+						curCreat++;
 					}
 					else if(strcmp(child->name(), (char*) "container") == 0) {
-						//TODO - add first Container initialization
+						contNodeArray[curCont] = child;
+						contArray[curCont] = firstContInit(child);
+						curCont++;
 					}
 					child = child -> next_sibling();
 				}
@@ -158,7 +196,10 @@ int main(int argc, char* argv[]) {
 							else if(strcmp(child2 -> name(), (char*) "item") == 0) {
 								wireItem(itemArray, &(roomInventories[curRoom][roomInventoryCount[curRoom]]), child2 -> value(),  maxItemCount); // Points the proper room in the roomArray to the proper item in itemArray
 								roomInventoryCount[curRoom]++;
-								// NEED REWORK - individual room inventories???
+							}
+							else if(strcmp(child2 -> name(), (char*) "container") == 0) {
+								wireCont(contArray, &(roomContainers[curRoom][roomContCount[curRoom]]), child2 -> value(), maxItemCount);
+								roomContCount[curRoom]++;
 							}
 							child2 = child2 -> next_sibling();
 						}
@@ -171,7 +212,15 @@ int main(int argc, char* argv[]) {
 						// TODO - address any pointers in a creature
 					}
 					else if (strcmp(child->name(), (char*) "container") == 0) {
-						// TODO - address any pointers in a container
+						child2 = child -> first_node();
+						while(child2 != 0) {
+							if(strcmp(child2 -> name(), (char*) "item") == 0) {
+								wireItemInCont(itemArray, &(contInventories[curCont][contItemCount[curCont]]), child2 -> value(), maxItemCount);
+								contItemCount[curCont]++;
+							}
+							child2 = child2 -> next_sibling();
+						}
+						curCont++;
 					}
 					child = child -> next_sibling();
 				}
@@ -182,6 +231,7 @@ int main(int argc, char* argv[]) {
 			player.Loc = findRoom(roomArray, (char*) "Entrance", maxRoomCount); 	// Finds room named Entrance in roomArray, points adventurer to that room
 			i = 0;
 			int strWord = 0;
+
 			std::string comp_input;
 			std::vector <std::string> input_vec;
 			std::vector <std::string>::iterator curWord;
@@ -190,13 +240,13 @@ int main(int argc, char* argv[]) {
 			std::string Word2;
 			std::string Word3;
 			std::string Word4;
+
 			int wordCount;
 			int valid = 0;  //0 if invalid, 1 if take, 2 if open, 3 if read, 4 if drop, 5 if put, 6 if turn on, 7 if attack
-
-
+			int roomIndex = 0;
 			std::cout << player.Loc -> Description << std::endl;
 			while (gameActive == 1) {
-
+				roomIndex = findRoomIndex(roomArray, player.Loc -> Name, maxRoomCount);
 				std::getline(std::cin, comp_input);
 
 				std::istringstream iss(comp_input);
@@ -221,7 +271,7 @@ int main(int argc, char* argv[]) {
 					player.openExit(&player, &gameActive);
 				}
 				else if(comp_input == "i") {
-					player.inventory(inventory);
+					player.inventory(inventory, inventoryCount);
 				}
 				else {
 
@@ -248,29 +298,36 @@ int main(int argc, char* argv[]) {
 							}
 							strWord = 0;
 
-							valid = validateWord(Word1, Word2, Word3, Word4, wordCount); //0 if invalid, 1 if take, 2 if open, 3 if read, 4 if drop, 5 if put, 6 if turn on, 7 if attack
+							valid = validateWord(Word1, Word2, Word3, Word4, wordCount);
 							if(valid == 0) {
 								std::cout << "Error" << std::endl;
 							}
 							else if(valid == 1) {
-								//takeItem
+								std::cout << "Valid is 1, takeItem Called" << std::endl;
+								takeItem(roomArray, roomInventories, player.Loc, itemArray, inventory, &inventoryCount, Word2, maxRoomCount, maxItemCount, &(roomInventoryCount[roomIndex]), roomContainers[roomIndex], contItemCount, contInventories, maxContCount);
 							}
 							else if(valid == 2) {
-								//openContainer
+								std::cout << "Valid is 2, openContainer Called" << std::endl;
+								openContainer(findRoom(roomArray, player.Loc -> Name, maxRoomCount), roomIndex, roomContainers[roomIndex], roomInventories[roomIndex], contInventories, maxRoomCount, maxItemCount, maxContCount, contItemCount, &(roomInventoryCount[roomIndex]) , Word2);
 							}
 							else if(valid == 3) {
-								//readItem
+								std::cout << "Valid is 3, readItem Called" << std::endl;
+								readItem(inventory, inventoryCount, Word2);
 							}
 							else if(valid == 4) {
-								//dropItem
+								std::cout << "Valid is 4, dropItem Called" << std::endl;
+								dropItem(roomArray, roomInventories, player.Loc, itemArray, inventory, &inventoryCount, Word2, maxRoomCount, maxItemCount, &(roomInventoryCount[roomIndex]));
 							}
 							else if(valid == 5) {
-								//putItem
+								std::cout << "Valid is 5, putItem Called" << std::endl;
+								putItem(contInventories, inventory, roomContainers[roomIndex], roomIndex, maxItemCount, maxContCount, Word2, Word4, contItemCount, &(inventoryCount));
 							}
 							else if(valid == 6) {
+								std::cout << "Valid is 6, turnOnItem Called" << std::endl;
 								//turnOnItem
 							}
 							else if(valid == 7) {
+								std::cout << "Valid is 7, attack Called" << std::endl;
 								//attack
 							}
 							else {
@@ -292,13 +349,79 @@ int main(int argc, char* argv[]) {
 			if(itemArray != NULL) {
 				delete [] itemArray;
 			}
-			/*if(creatArray != NULL) {
+			if(roomInventoryCount != NULL) {
+				delete [] roomInventoryCount;
+			}
+			if(inventory != NULL) {
+				delete [] inventory;
+			}
+			if(roomInventories != NULL) {
+				for(i = 0; i < maxRoomCount; i++) {
+					if(roomInventories[i] != NULL) {
+						delete [] roomInventories[i];
+					}
+				}
+				delete [] roomInventories;
+			}
+
+			if(contInventories != NULL) {
+				for(i = 0; i < maxContCount; i++) {
+					if(contInventories[i] != NULL) {
+						delete [] contInventories[i];
+					}
+				}
+				delete [] contInventories;
+			}
+
+			if(roomContainers != NULL) {
+				for(i = 0; i < maxRoomCount; i++) {
+					if(roomContainers[i] != NULL) {
+						delete [] roomContainers[i];
+					}
+				}
+				delete [] roomContainers;
+			}
+			if(roomCreatures != NULL) {
+				for(i = 0; i < maxRoomCount; i++) {
+					if(roomCreatures[i] != NULL) {
+						delete [] roomCreatures[i];
+					}
+				}
+				delete [] roomCreatures;
+			}
+			if(contTrigCount != NULL) {
+				delete [] contTrigCount;
+			}
+
+			if(contItemCount != NULL) {
+				delete [] contItemCount;
+			}
+
+			if(contArray != NULL) {
+				delete [] contArray;
+			}
+			if(roomContCount != NULL) {
+				delete [] roomContCount;
+			}
+			if(roomTrigCount != NULL) {
+				delete [] roomTrigCount;
+			}
+			if(roomNodeArray != NULL) {
+				delete [] roomNodeArray;
+			}
+			if(itemNodeArray != NULL) {
+				delete [] itemNodeArray;
+			}
+			if(creatNodeArray != NULL) {
+				delete [] creatNodeArray;
+			}
+			if(contNodeArray != NULL) {
+				delete [] contNodeArray;
+			}
+			if(creatArray != NULL) {
 			  delete [] creatArray;
-			  }
-			  if(contArray != NULL) {
-			  delete [] contArray;
-			  }
-			  */
+			}
+			
 		}
 	}
 	delete [] fileInput;

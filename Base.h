@@ -5,6 +5,8 @@
 #include "Room.h"
 #include "Item.h"
 #include "Adventurer.h"
+#include "Container.h"
+#include "Creature.h"
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,11 +21,26 @@ using namespace rapidxml;
 
 Item firstItemInit(xml_node<>*);
 Room firstRoomInit(xml_node<>*);
+Container firstContInit(xml_node<>*);
+Creature firstCreatInit(xml_node<>*);
 Room* findRoom(Room*, char*, int);
-void wireRoom(Room*, Room*, char*, char*, int);
 Item* findItem(Item*, char*, int);
-void wireItem(Item*, Item**, char*, int);
+Container* findCont(Container*, char*, int);
 int validateWord(std::string, std::string, std::string, std::string, int);
+void takeItem(Room*, Item***, Room*, Item*, Item**, int*, std::string, int, int, int*, Container**, int*, Item***, int);
+void dropItem(Room*, Item***, Room*, Item*, Item**, int*, std::string, int, int, int*);
+void openContainer(Room*, int, Container**, Item**, Item***, int, int, int, int*, int*, std::string);
+void putItem(Item***, Item*, Container**, int, int, int, std::string, std::string, int*, int*);
+int findRoomIndex(Room*, char*, int);
+int findItemIndex(Item*, char*, int);
+int findContIndex(Container*, char*, int);
+void readItem(Item**, int, std::string);
+void sortMissingItem(int*, Item**);
+void wireItem(Item*, Item**, char*, int);
+void wireCont(Container*, Container**, char*, int);
+void wireRoom(Room*, Room*, char*, char*, int);
+void wireItemInCont(Item*, Item**, char*, int);
+int checkDupes(Item**, Item*, int);
 
 
 #endif

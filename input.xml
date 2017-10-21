@@ -76,6 +76,8 @@
 <container>
 <name>chest</name>
 <item>explosive</item>
+<item>key</item>
+<item>torch</item>
 </container>
 <container>
 <name>lock</name>

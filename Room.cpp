@@ -60,3 +60,17 @@ void wireRoom(Room* roomArray, Room* curRoom, char* name, char* direction, int m
 	}
 	return;
 }
+
+
+int findRoomIndex(Room* roomArray, char* Name, int maxRoom) {
+	int index = 0; //Returns if Room not existent
+	int i;
+	for(i = 0; i < maxRoom; i++) {
+		if(strcmp(roomArray[i].Name, Name) == 0) {
+			index = i;
+			i += maxRoom;
+		}
+	}
+
+	return index;
+}
