@@ -288,38 +288,61 @@ void openContainer(Room* curRoom, int curRoomIndex, Container** roomContainers, 
 		std::cout << "Container is not present in current room" << std::endl;
 	}
 	else {
-		//int change2 = 0;
-		if(contItemCounts[curContIndex] == 0) {
-			std::cout << roomContainers[curContIndex] -> Name << " is empty" << std::endl;
-		}
-		else {
-			std::cout << roomContainers[curContIndex] -> Name << " contains ";
-			for(i = 0; i < contItemCounts[curContIndex]; i++) {
-				if(contInventories[curContIndex][i] != NULL) {
-					std::cout << contInventories[curContIndex][i] -> Name;
-					if(contItemCounts[curContIndex] > 1) {
-						if(i != (contItemCounts[curContIndex] - 1)) {
-							std::cout << ", ";
-						}
+		int itemPres = 0;
+		int j;
+		std::string curItemName;
+		std::string curName;
+		//Check for accept elements in inventory
+		if(acceptItem[curContIndex] >= 1) {
+			for(i = 0; i < acceptItem[curContIndex]; i++) {
+				curName = acceptItemNames[curContIndex][i];
+				for(j = 0; j < contItemCounts[curContIndex]; j++) {
+					curItemName = string(contInventories[curContIndex][j] -> Name);
+					if(curItemName == curName) {
+						itemPres = 1;
+						j += *contItemCounts;
+						i += acceptItem[curContIndex];
 					}
 				}
 			}
-			std::cout << std::endl;
-			int j = *roomInvenCount;
-			for(i = 0; i < contItemCounts[curContIndex]; i++) {
-				if(checkDupes(roomInventory, contInventories[curContIndex][i], maxItem) == 0) {
-					roomInventory[j] = contInventories[curContIndex][i];
-					j++;
-				}
+		}
+
+		if(acceptItem[curContIndex] == 0 || itemPres == 1) {
+			if(contItemCounts[curContIndex] == 0) {
+				std::cout << roomContainers[curContIndex] -> Name << " is empty" << std::endl;
 			}
-			
-			j = 0;
-			for(i = 0; i < maxItem; i++) {
-				if(roomInventory[i] != NULL) {
-					j++;
+			else {
+				std::cout << roomContainers[curContIndex] -> Name << " contains ";
+				for(i = 0; i < contItemCounts[curContIndex]; i++) {
+					if(contInventories[curContIndex][i] != NULL) {
+						std::cout << contInventories[curContIndex][i] -> Name;
+						if(contItemCounts[curContIndex] > 1) {
+							if(i != (contItemCounts[curContIndex] - 1)) {
+								std::cout << ", ";
+							}
+						}
+					}
 				}
+				std::cout << std::endl;
+				int j = *roomInvenCount;
+				for(i = 0; i < contItemCounts[curContIndex]; i++) {
+					if(checkDupes(roomInventory, contInventories[curContIndex][i], maxItem) == 0) {
+						roomInventory[j] = contInventories[curContIndex][i];
+						j++;
+					}
+				}
+				
+				j = 0;
+				for(i = 0; i < maxItem; i++) {
+					if(roomInventory[i] != NULL) {
+						j++;
+					}
+				}
+				(*roomInvenCount) = j;
 			}
-			(*roomInvenCount) = j;
+		}
+		else {
+			std::cout << "Items cannot be placed in container until accept item is present" << std::endl;
 		}
 	}
 	delete [] wordChar;
