@@ -9,7 +9,7 @@ Container::Container() {
 Container::~Container() { 
 }
 
-Container firstContInit(xml_node<>* child) {
+Container firstContInit(xml_node<>* child, int* acceptElement) {
 	xml_node<>* child2 = child->first_node();
     Container newCont = Container();
     while(child2 != 0) {
@@ -21,6 +21,9 @@ Container firstContInit(xml_node<>* child) {
         }
         else if(strcmp(child2 -> name(), (char*) "status") == 0) {
         	newCont.Status = child2->value();
+        }
+        else if(strcmp(child2 -> name(), (char*) "accept") == 0) {
+            (*acceptElement)++;
         }
         child2 = child2 -> next_sibling();
 	}

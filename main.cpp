@@ -67,6 +67,7 @@ int main(int argc, char* argv[]) {
 			int* roomContCount = new int[maxRoomCount];
 			int* roomTrigCount = new int[maxRoomCount];
 			int* roomInventoryCount = new int[maxRoomCount];
+			int* acceptItem = new int[maxContCount];
 
 			for(i = 0; i < maxRoomCount; i++) {
 				roomInventories[i] = new Item*[maxItemCount];
@@ -81,6 +82,7 @@ int main(int argc, char* argv[]) {
 				roomContainers[i] = new Container*[maxContCount];
 				for(j = 0; j < maxContCount; j++) {
 					roomContainers[i][j] = NULL;
+					acceptItem[j] = 0;
 				}
 				roomTrigCount[i] = 0;
 				roomContCount[i] = 0;
@@ -157,7 +159,7 @@ int main(int argc, char* argv[]) {
 					}
 					else if(strcmp(child->name(), (char*) "container") == 0) {
 						contNodeArray[curCont] = child;
-						contArray[curCont] = firstContInit(child);
+						contArray[curCont] = firstContInit(child, &(acceptItem[curCont]));
 						curCont++;
 					}
 					child = child -> next_sibling();
@@ -165,7 +167,16 @@ int main(int argc, char* argv[]) {
 				node = node -> next_sibling();
 			}
 
+			std::string** acceptItemArray = new std::string*[maxContCount];
+			for(i = 0; i < maxContCount; i++) {
+				acceptItemArray[i] = new std::string[acceptItem[i]];
+				for(j = 0; j < acceptItem[i]; j++) {
+					acceptItemArray[i][j] = "";
+				}
+			}
+
 			node = doc.first_node();
+			i = 0;
 			curRoom = 0;
 			curItem = 0;
 			curCreat = 0;
@@ -218,8 +229,13 @@ int main(int argc, char* argv[]) {
 								wireItemInCont(itemArray, &(contInventories[curCont][contItemCount[curCont]]), child2 -> value(), maxItemCount);
 								contItemCount[curCont]++;
 							}
+							else if(strcmp(child2 -> name(), (char*) "accept") == 0) {
+								acceptItemArray[curCont][i] = string(child2 -> value());
+								i++;
+							}
 							child2 = child2 -> next_sibling();
 						}
+						i = 0;
 						curCont++;
 					}
 					child = child -> next_sibling();
@@ -308,7 +324,7 @@ int main(int argc, char* argv[]) {
 							}
 							else if(valid == 2) {
 								std::cout << "Valid is 2, openContainer Called" << std::endl;
-								openContainer(findRoom(roomArray, player.Loc -> Name, maxRoomCount), roomIndex, roomContainers[roomIndex], roomInventories[roomIndex], contInventories, maxRoomCount, maxItemCount, maxContCount, contItemCount, &(roomInventoryCount[roomIndex]) , Word2);
+								openContainer(findRoom(roomArray, player.Loc -> Name, maxRoomCount), roomIndex, roomContainers[roomIndex], roomInventories[roomIndex], contInventories, maxRoomCount, maxItemCount, maxContCount, contItemCount, &(roomInventoryCount[roomIndex]) , Word2, acceptItem, acceptItemArray);
 							}
 							else if(valid == 3) {
 								std::cout << "Valid is 3, readItem Called" << std::endl;
@@ -320,7 +336,7 @@ int main(int argc, char* argv[]) {
 							}
 							else if(valid == 5) {
 								std::cout << "Valid is 5, putItem Called" << std::endl;
-								putItem(contInventories, inventory, roomContainers[roomIndex], roomIndex, maxItemCount, maxContCount, Word2, Word4, contItemCount, &(inventoryCount));
+								putItem(contInventories, inventory, roomContainers[roomIndex], roomIndex, maxItemCount, maxContCount, Word2, Word4, contItemCount, &(inventoryCount), acceptItem, acceptItemArray);
 							}
 							else if(valid == 6) {
 								std::cout << "Valid is 6, turnOnItem Called" << std::endl;
@@ -420,8 +436,7 @@ int main(int argc, char* argv[]) {
 			}
 			if(creatArray != NULL) {
 			  delete [] creatArray;
-			}
-			
+			}	
 		}
 	}
 	delete [] fileInput;

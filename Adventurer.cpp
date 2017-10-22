@@ -266,7 +266,7 @@ void readItem(Item** itemArray, int invenCount, std::string word) {
 	return;
 }
 
-void openContainer(Room* curRoom, int curRoomIndex, Container** roomContainers, Item** roomInventory, Item*** contInventories, int maxRoom, int maxItem, int maxCont, int* contItemCounts, int* roomInvenCount, std::string word) {
+void openContainer(Room* curRoom, int curRoomIndex, Container** roomContainers, Item** roomInventory, Item*** contInventories, int maxRoom, int maxItem, int maxCont, int* contItemCounts, int* roomInvenCount, std::string word, int* acceptItem, std::string** acceptItemNames) {
 	char* wordChar = new char[word.length() + 1];
 	strcpy(wordChar, word.c_str());
 	wordChar[word.length()] = '\0';
@@ -344,21 +344,21 @@ int checkDupes(Item** roomInventory, Item* newItem, int maxItem) {
 	return choice;
 }
 
-void putItem(Item*** contInventories, Item* inventory, Container** roomContainers, int roomIndex, int maxItem, int maxCont, std::string word, std::string word2, int* contInvenCounts, int* invenCount) {
+void putItem(Item*** contInventories, Item** inventory, Container** roomContainers, int roomIndex, int maxItem, int maxCont, std::string word, std::string word2, int* contInvenCounts, int* invenCount, int* acceptItem, std::string** acceptItemNames) {
 	char* itemChar = new char[word.length() + 1];
-	strcpy(wordChar, word.c_str());
-	wordChar[word.length()] = '\0';
+	strcpy(itemChar, word.c_str());
+	itemChar[word.length()] = '\0';
 
 	char* contChar = new char[word2.length() + 1];
-	strcpy(wordChar, word2.c_str());
-	wordChar[word2.length()] = '\0';
+	strcpy(contChar, word2.c_str());
+	contChar[word2.length()] = '\0';
 
 	int invIndex;
 	int i;
 	int change1 = 0;
 	for(i = 0; i < maxItem; i++) {
 		if(inventory[i] != NULL) {
-			if(strcmp(inventory[i].Name, itemChar) == 0) {
+			if(strcmp(inventory[i] -> Name, itemChar) == 0) {
 				invIndex = i;
 				i += maxItem;
 				change1 = 1;
@@ -371,10 +371,11 @@ void putItem(Item*** contInventories, Item* inventory, Container** roomContainer
 	}
 	else {
 		int contIndex;
+		int itemGood = 0;
 		int change2 = 0;
 		for(i = 0; i < maxCont; i++) {
 			if(roomContainers[i] != NULL) {
-				if(strcmp(roomContainer[i] -> Name, contChar) == 0) {
+				if(strcmp(roomContainers[i] -> Name, contChar) == 0) {
 					change2 = 1;
 					contIndex = i;
 					i += maxCont;
@@ -386,20 +387,38 @@ void putItem(Item*** contInventories, Item* inventory, Container** roomContainer
 			std::cout << "Container " << word2 << " was not found in the current room" << std::endl;
 		}
 		else {
-			int lastContItem;
-			for(i = 0; i < maxItem; i++) {
-				if(contInventories[contIndex][i] == NULL) {
-					lastContItem = i;
-					i += maxItem;
+
+			if(acceptItem[contIndex] >= 1) {
+				for(i = 0; i < acceptItem[contIndex]; i++) {
+					if(acceptItemNames[contIndex][i] == word) {
+						itemGood = 1;
+						i += acceptItem[contIndex];
+					}
 				}
 			}
+			
+			if(acceptItem[contIndex] == 0 || itemGood == 1) {
+				int lastContItem;
+				for(i = 0; i < maxItem; i++) {
+					if(contInventories[contIndex][i] == NULL) {
+						lastContItem = i;
+						i += maxItem;
+					}
+				}
+			
+	
+				Item* temp = inventory[invIndex];
+				inventory[invIndex] = NULL;
+				contInventories[contIndex][lastContItem] = temp;
 
-			Item* temp = inventory[invIndex];
-			inventory[invIndex] = NULL;
-			contInventories[contIndex][lastContItem] = temp;
-			sortMissingItem(inventory, invenCount);
-			(*invenCount)--;
-			invenCount[contIndex]++;
+				std::cout << "Item " << contInventories[contIndex][lastContItem] -> Name << " was added to " << roomContainers[contIndex] -> Name << std::endl;
+				sortMissingItem(invenCount, inventory);
+				(*invenCount)--;
+				contInvenCounts[contIndex]++;
+			}
+			else {
+				std::cout << "Item " << word << " could not be put in container" << std::endl;
+			}
 		}
 	}
 
